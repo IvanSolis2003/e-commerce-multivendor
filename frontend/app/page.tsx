@@ -84,46 +84,48 @@ export default async function HomePage() {
   );
 }
 
-// Component: Product Card
+// ============================================================
+// Componente: Product Card (ACTUALIZADO para Strapi v5)
+// ============================================================
 function ProductCard({ product }: { product: Product }) {
-  const attributes = product?.attributes;
-
-  const image = attributes?.images?.data?.[0];
-  const imageUrl = image
-    ? getStrapiMedia(image.attributes?.url)
-    : '/placeholder.jpg';
+  // Obtener la primera imagen (ahora sin .data)
+  const image = product.images?.[0];
+  const imageUrl = image ? getStrapiMedia(image.url) : '/placeholder.jpg';
   
-  const finalPrice =
-    attributes?.discount && attributes.discount > 0
-      ? attributes.price * (1 - attributes.discount / 100)
-      : attributes?.price ?? 0;
+  // Calcular precio final con descuento
+  const price = product.price || 0;
+  const discount = product.discount || 0;
+  const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
   return (
     <Link
-      href={`/products/${attributes?.slug}`}
+      href={`/products/${product.slug}`}
       className="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
     >
+      {/* Imagen */}
       <div className="relative h-48 bg-gray-200">
         <img
           src={imageUrl}
-          alt={attributes?.name}
+          alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition"
         />
-        {attributes?.discount > 0 && (
+        {discount > 0 && (
           <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-            -{attributes.discount}%
+            -{discount}%
           </span>
         )}
       </div>
+
+      {/* Contenido */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {attributes?.name}
+          {product.name}
         </h3>
         <div className="flex items-center justify-between">
           <div>
-            {attributes?.discount > 0 && (
+            {discount > 0 && (
               <p className="text-sm text-gray-500 line-through">
-                {formatPrice(attributes.price)}
+                {formatPrice(price)}
               </p>
             )}
             <p className="text-lg font-bold text-indigo-600">
@@ -139,7 +141,9 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// Component: Category Card
+// ============================================================
+// Componente: Category Card
+// ============================================================
 function CategoryCard({ name, icon, slug }: { name: string; icon: string; slug: string }) {
   return (
     <Link
