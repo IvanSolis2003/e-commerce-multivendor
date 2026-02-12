@@ -1,23 +1,55 @@
+'use client';
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useCart } from '@/lib/contexts/CartContext';
 import { getProductBySlug, formatPrice, getStrapiMedia } from '@/lib/api';
 import type { Product } from '@/types';
 
-// ============================================================
-// Página de detalle de producto
-// ============================================================
-export default async function ProductDetailPage({
+export default function ProductDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // Obtener el slug de los parámetros (Next.js 16+)
-  const { slug } = await params;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Buscar el producto por slug
-  const product = await getProductBySlug(slug);
+  // Hook del carrito
+  const { addItem } = useCart();
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // Si no existe, mostrar página 404
+  // Cargar producto
+  useEffect(() => {
+    params.then(async (p) => {
+      const productData = await getProductBySlug(p.slug);
+      setProduct(productData);
+      setIsLoading(false);
+    });
+  }, [params]);
+
+  // Función para agregar al carrito
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    addItem(product);
+    
+    // Mostrar mensaje de éxito
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-gray-600">Cargando producto...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     notFound();
   }
@@ -41,6 +73,13 @@ export default async function ProductDetailPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notificación de éxito */}
+      {showSuccess && (
+        <div className="fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-bounce">
+          ✅ Producto agregado al carrito
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
@@ -170,9 +209,10 @@ export default async function ProductDetailPage({
                 </div>
               )}
 
-              {/* Botones de acción */}
+              {/* Botones de acción - ACTUALIZADO */}
               <div className="space-y-3 mb-8">
                 <button
+                  onClick={handleAddToCart}
                   disabled={product.stock === 0}
                   className={`w-full py-4 rounded-lg font-semibold text-lg transition ${
                     product.stock > 0
@@ -184,9 +224,13 @@ export default async function ProductDetailPage({
                     ? '🛒 Agregar al carrito'
                     : 'Producto agotado'}
                 </button>
-                <button className="w-full py-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition">
-                  ❤️ Agregar a favoritos
-                </button>
+                
+                <Link
+                  href="/cart"
+                  className="block w-full py-4 border-2 border-indigo-600 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition text-center"
+                >
+                  Ver Carrito
+                </Link>
               </div>
 
               {/* Vendedor */}
@@ -222,16 +266,13 @@ export default async function ProductDetailPage({
             />
           </div>
         </div>
-
-        {/* Sección de productos relacionados */}
-        {/* TODO: Agregar después */}
       </div>
     </div>
   );
 }
 
 // ============================================================
-// Componente: Galería de imágenes
+// Resto de componentes (ProductImages, ProductTabs)
 // ============================================================
 function ProductImages({
   images,
@@ -240,7 +281,6 @@ function ProductImages({
   images: any[];
   productName: string;
 }) {
-  // Si no hay imágenes, mostrar placeholder
   if (images.length === 0) {
     return (
       <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
@@ -254,7 +294,6 @@ function ProductImages({
 
   return (
     <div className="space-y-4">
-      {/* Imagen principal */}
       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
         <img
           src={imageUrl}
@@ -263,7 +302,6 @@ function ProductImages({
         />
       </div>
 
-      {/* Miniaturas (si hay más de una imagen) */}
       {images.length > 1 && (
         <div className="grid grid-cols-4 gap-4">
           {images.slice(0, 4).map((image, index) => (
@@ -284,9 +322,6 @@ function ProductImages({
   );
 }
 
-// ============================================================
-// Componente: Tabs de información
-// ============================================================
 function ProductTabs({
   description,
   specifications,
@@ -298,7 +333,6 @@ function ProductTabs({
 }) {
   return (
     <div className="p-8">
-      {/* Descripción */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
         <div className="prose max-w-none text-gray-600">
@@ -313,7 +347,6 @@ function ProductTabs({
         </div>
       </div>
 
-      {/* Especificaciones */}
       {specifications && Object.keys(specifications).length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -336,7 +369,6 @@ function ProductTabs({
         </div>
       )}
 
-      {/* Reseñas */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Reseñas de Clientes ({reviews.length})

@@ -2,9 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useCart } from '@/lib/contexts/CartContext';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Usar el carrito para obtener la cantidad de items
+  const { getItemCount } = useCart();
+  const itemCount = getItemCount();
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -52,15 +57,17 @@ export default function Navbar() {
               🔍
             </button>
 
-            {/* Cart */}
+            {/* Cart con contador actualizado */}
             <Link 
               href="/cart" 
               className="relative p-2 hover:bg-gray-100 rounded-full transition"
             >
-              🛒
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
+              <span className="text-2xl">🛒</span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse">
+                  {itemCount}
+                </span>
+              )}
             </Link>
 
             {/* Login */}
@@ -106,7 +113,7 @@ export default function Navbar() {
                 Tiendas
               </Link>
               <Link href="/cart" className="px-4 py-2 hover:bg-gray-100 rounded">
-                🛒 Carrito (0)
+                🛒 Carrito ({itemCount})
               </Link>
               <Link href="/login" className="px-4 py-2 hover:bg-gray-100 rounded">
                 Iniciar Sesión
