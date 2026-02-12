@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useCart } from '@/lib/contexts/CartContext';
-import { formatPrice, getStrapiMedia } from '@/lib/api';
+import { getStrapiMedia } from '@/lib/api';
+import { formatPrice } from '@/lib/utils/format'; 
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, getSubtotal, getTotal, clearCart } = useCart();
@@ -99,9 +100,10 @@ export default function CartPage() {
               </div>
 
               <Link
-                href="/checkout"
+                href="/checkout"  
                 className="block w-full bg-indigo-600 text-white text-center py-4 rounded-lg font-semibold hover:bg-indigo-700 transition mb-3"
-              >
+>
+  Proceder al Pago
                 Proceder al Pago
               </Link>
 

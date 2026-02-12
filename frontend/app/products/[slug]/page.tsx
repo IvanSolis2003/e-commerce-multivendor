@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/lib/contexts/CartContext';
-import { getProductBySlug, formatPrice, getStrapiMedia } from '@/lib/api';
+import { getProductBySlug, getStrapiMedia } from '@/lib/api';
+import { formatPrice } from '@/lib/utils/format';  // ← CAMBIO AQUÍ
 import type { Product } from '@/types';
 
 export default function ProductDetailPage({

@@ -12,7 +12,9 @@ const api = axios.create({
   },
 });
 
+// ============================================================
 // Funciones para obtener datos
+// ============================================================
 
 export async function getProducts(): Promise<Product[]> {
   const response = await api.get<StrapiResponse<Product[]>>(
@@ -49,19 +51,13 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   return response.data.data;
 }
 
+// ============================================================
 // Función helper para construir URLs de imágenes
+// ============================================================
 export function getStrapiMedia(url: string | undefined): string {
-  if (!url) return '/placeholder-image.jpg';
+  if (!url) return '/placeholder.jpg';
   if (url.startsWith('http')) return url;
   return `${API_URL}${url}`;
-}
-
-// Función helper para formatear precios
-export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-  }).format(price);
 }
 
 export default api;

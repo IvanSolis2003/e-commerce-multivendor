@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getProducts, getFeaturedProducts, formatPrice, getStrapiMedia } from '@/lib/api';
+import { getProducts, getFeaturedProducts, getStrapiMedia } from '@/lib/api';
+import { formatPrice } from '@/lib/utils/format';  // ← CAMBIO AQUÍ
 import type { Product } from '@/types';
 
 export default async function HomePage() {
