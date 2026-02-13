@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-xl font-bold mb-4">🛍️ E-Shop</h3>
+            <h3 className="text-xl font-bold mb-4">🛍️ IASM20</h3>
             <p className="text-gray-400 text-sm">
               Tu marketplace de confianza con los mejores vendedores y productos de Chile.
             </p>
@@ -92,9 +92,9 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>© 2026 E-Shop. Todos los derechos reservados.</p>
+          <p>© 2026 IASM20-Shop. Todos los derechos reservados.</p>
           <p className="mt-2">
-            Desarrollado con ❤️ usando Next.js y Strapi
+            Desarrollado por Iván Solís  usando Next.js y Strapi
           </p>
         </div>
       </div>

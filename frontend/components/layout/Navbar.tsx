@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useCart } from '@/lib/contexts/CartContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
-  // Usar el carrito para obtener la cantidad de items
   const { getItemCount } = useCart();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  
   const itemCount = getItemCount();
 
   return (
@@ -18,7 +21,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-indigo-600">
-              🛍️ E-Shop
+              🛍️ IASM20-Shop
             </span>
           </Link>
 
@@ -57,7 +60,7 @@ export default function Navbar() {
               🔍
             </button>
 
-            {/* Cart con contador actualizado */}
+            {/* Cart */}
             <Link 
               href="/cart" 
               className="relative p-2 hover:bg-gray-100 rounded-full transition"
@@ -70,21 +73,89 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Login */}
-            <Link 
-              href="/login" 
-              className="text-gray-700 hover:text-indigo-600 font-medium transition"
-            >
-              Iniciar Sesión
-            </Link>
-            
-            {/* Register */}
-            <Link 
-              href="/register" 
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-            >
-              Registrarse
-            </Link>
+            {/* Auth Section */}
+            {isLoading ? (
+              <div className="animate-pulse bg-gray-200 h-10 w-32 rounded-lg"></div>
+            ) : isAuthenticated && user ? (
+              /* Usuario logueado - Menú desplegable */
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+                >
+                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-medium text-gray-700">{user.username}</span>
+                  <span className="text-gray-400">▼</span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="text-sm text-gray-500">Conectado como</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                    
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      👤 Mi Perfil
+                    </Link>
+                    
+                    <Link
+                      href="/orders"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      📦 Mis Pedidos
+                    </Link>
+                    
+                    <Link
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      ⚙️ Configuración
+                    </Link>
+                    
+                    <div className="border-t border-gray-200 mt-2 pt-2">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        🚪 Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Usuario no logueado */
+              <>
+                <Link 
+                  href="/login" 
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition"
+                >
+                  Iniciar Sesión
+                </Link>
+                
+                <Link 
+                  href="/register" 
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -115,12 +186,35 @@ export default function Navbar() {
               <Link href="/cart" className="px-4 py-2 hover:bg-gray-100 rounded">
                 🛒 Carrito ({itemCount})
               </Link>
-              <Link href="/login" className="px-4 py-2 hover:bg-gray-100 rounded">
-                Iniciar Sesión
-              </Link>
-              <Link href="/register" className="px-4 py-2 bg-indigo-600 text-white rounded text-center">
-                Registrarse
-              </Link>
+              
+              {isAuthenticated && user ? (
+                <>
+                  <div className="px-4 py-2 border-t border-gray-200 mt-2 pt-3">
+                    <p className="text-sm text-gray-500 mb-1">Hola, {user.username}</p>
+                  </div>
+                  <Link href="/profile" className="px-4 py-2 hover:bg-gray-100 rounded">
+                    👤 Mi Perfil
+                  </Link>
+                  <Link href="/orders" className="px-4 py-2 hover:bg-gray-100 rounded">
+                    📦 Mis Pedidos
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded"
+                  >
+                    🚪 Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="px-4 py-2 hover:bg-gray-100 rounded">
+                    Iniciar Sesión
+                  </Link>
+                  <Link href="/register" className="px-4 py-2 bg-indigo-600 text-white rounded text-center">
+                    Registrarse
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
