@@ -35,7 +35,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-indigo-600">
-              🛍️ E-Shop
+               IASM20-SHOP
             </span>
           </Link>
 
