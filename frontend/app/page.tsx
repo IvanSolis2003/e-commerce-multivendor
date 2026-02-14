@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { getProducts, getFeaturedProducts, getStrapiMedia } from '@/lib/api';
-import { formatPrice } from '@/lib/utils/format';  // ← CAMBIO AQUÍ
-import type { Product } from '@/types';
+import { getFeaturedProducts } from '@/lib/api';
+import { ProductCard } from '@/components/products/ProductCard';
 
 export default async function HomePage() {
   // Obtener productos destacados desde Strapi
@@ -14,7 +13,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Bienvenido a IASM20-Shop
+              Bienvenido a E-Shop
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-indigo-100">
               Descubre los mejores productos de vendedores confiables
@@ -51,10 +50,10 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/* Products Grid */}
+        {/* Products Grid usando ProductCard */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} variant="compact" />
           ))}
         </div>
 
@@ -86,69 +85,12 @@ export default async function HomePage() {
 }
 
 // ============================================================
-// Componente: Product Card (ACTUALIZADO para Strapi v5)
-// ============================================================
-function ProductCard({ product }: { product: Product }) {
-  // Obtener la primera imagen (ahora sin .data)
-  const image = product.images?.[0];
-  const imageUrl = image ? getStrapiMedia(image.url) : '/placeholder.jpg';
-  
-  // Calcular precio final con descuento
-  const price = product.price || 0;
-  const discount = product.discount || 0;
-  const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
-
-  return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
-    >
-      {/* Imagen */}
-      <div className="relative h-48 bg-gray-200">
-        <img
-          src={imageUrl}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition"
-        />
-        {discount > 0 && (
-          <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-            -{discount}%
-          </span>
-        )}
-      </div>
-
-      {/* Contenido */}
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {product.name}
-        </h3>
-        <div className="flex items-center justify-between">
-          <div>
-            {discount > 0 && (
-              <p className="text-sm text-gray-500 line-through">
-                {formatPrice(price)}
-              </p>
-            )}
-            <p className="text-lg font-bold text-indigo-600">
-              {formatPrice(finalPrice)}
-            </p>
-          </div>
-          <button className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition text-sm">
-            Ver
-          </button>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ============================================================
 // Componente: Category Card
 // ============================================================
 function CategoryCard({ name, icon, slug }: { name: string; icon: string; slug: string }) {
   return (
     <Link
-      href={`/categories/${slug}`}
+      href={`/products?category=${slug}`}
       className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition group"
     >
       <div className="text-5xl mb-3 group-hover:scale-110 transition">
