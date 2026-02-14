@@ -132,6 +132,18 @@ export default async function ProductsPage({
               <p className="text-gray-600">
                 Mostrando <span className="font-semibold">{filteredProducts.length}</span>{' '}
                 {filteredProducts.length === 1 ? 'producto' : 'productos'}
+                {params.search && (
+                  <span className="ml-2">
+                    para <span className="font-semibold">"{params.search}"</span>
+                  </span>
+                )}
+                {params.category && (
+                  <span className="ml-2">
+                    en <span className="font-semibold">
+                      {categories.find(c => c.slug === params.category)?.name}
+                    </span>
+                  </span>
+                )}
               </p>
             </div>
 
