@@ -703,6 +703,51 @@ export interface ApiReviewReview extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiVendorApplicationVendorApplication
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'vendor_applications';
+  info: {
+    displayName: 'Vendor Application';
+    pluralName: 'vendor-applications';
+    singularName: 'vendor-application';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    adminNotes: Schema.Attribute.Blocks;
+    applicationStatus: Schema.Attribute.Enumeration<
+      ['pending', 'approved', 'rejected']
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
+    businessName: Schema.Attribute.String;
+    businessType: Schema.Attribute.Enumeration<
+      ['Retail', 'Wholesale', 'Manufacturer', 'Service']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Blocks;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vendor-application.vendor-application'
+    > &
+      Schema.Attribute.Private;
+    ownerName: Schema.Attribute.String;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    taxId: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    website: Schema.Attribute.String;
+  };
+}
+
 export interface ApiVendorVendor extends Struct.CollectionTypeSchema {
   collectionName: 'vendors';
   info: {
@@ -1280,6 +1325,7 @@ declare module '@strapi/strapi' {
       'api::order.order': ApiOrderOrder;
       'api::product.product': ApiProductProduct;
       'api::review.review': ApiReviewReview;
+      'api::vendor-application.vendor-application': ApiVendorApplicationVendorApplication;
       'api::vendor.vendor': ApiVendorVendor;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

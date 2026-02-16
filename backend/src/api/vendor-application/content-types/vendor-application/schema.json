@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vendor_applications",
+  "info": {
+    "singularName": "vendor-application",
+    "pluralName": "vendor-applications",
+    "displayName": "Vendor Application"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "businessName": {
+      "type": "string"
+    },
+    "ownerName": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "description": {
+      "type": "blocks"
+    },
+    "businessType": {
+      "type": "enumeration",
+      "enum": [
+        "Retail",
+        "Wholesale",
+        "Manufacturer",
+        "Service"
+      ]
+    },
+    "taxId": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "applicationStatus": {
+      "type": "enumeration",
+      "default": "pending",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    },
+    "adminNotes": {
+      "type": "blocks"
+    }
+  }
+}
