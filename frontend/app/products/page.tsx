@@ -10,7 +10,6 @@ export default async function ProductsPage({
 }) {
   // Hacer await de searchParams (Next.js 16)
   const params = await searchParams;
-
   // Obtener productos y categorías desde Strapi
   const allProducts = await getProducts();
   const categories = await getCategories();
@@ -77,11 +76,10 @@ export default async function ProductsPage({
                   <li>
                     <Link
                       href="/products"
-                      className={`block px-3 py-2 rounded transition ${
-                        !params.category
-                          ? 'bg-indigo-50 text-indigo-600 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className={`block px-3 py-2 rounded transition ${!params.category
+                        ? 'bg-indigo-50 text-indigo-600 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}
                     >
                       Todas las categorías
                     </Link>
@@ -97,11 +95,10 @@ export default async function ProductsPage({
                       <li key={category.id}>
                         <Link
                           href={`/products?category=${category.slug}`}
-                          className={`block px-3 py-2 rounded transition ${
-                            params.category === category.slug
-                              ? 'bg-indigo-50 text-indigo-600 font-medium'
-                              : 'text-gray-700 hover:bg-gray-50'
-                          }`}
+                          className={`block px-3 py-2 rounded transition ${params.category === category.slug
+                            ? 'bg-indigo-50 text-indigo-600 font-medium'
+                            : 'text-gray-700 hover:bg-gray-50'
+                            }`}
                         >
                           {category.name}
                         </Link>

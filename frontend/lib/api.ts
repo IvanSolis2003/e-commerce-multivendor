@@ -17,17 +17,27 @@ const api = axios.create({
 // ============================================================
 
 export async function getProducts(): Promise<Product[]> {
-  const response = await api.get<StrapiResponse<Product[]>>(
-    '/products?populate=*'
-  );
-  return response.data.data;
+  try {
+    const response = await api.get<StrapiResponse<Product[]>>(
+      '/products?populate=*&pagination[pageSize]=100'
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error al obtener productos:', error);
+    return [];
+  }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const response = await api.get<StrapiResponse<Product[]>>(
-    `/products?filters[slug][$eq]=${slug}&populate=*`
-  );
-  return response.data.data[0] || null;
+  try {
+    const response = await api.get<StrapiResponse<Product[]>>(
+      `/products?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*`
+    );
+    return response.data.data[0] || null;
+  } catch (error) {
+    console.error('Error al obtener el producto:', error);
+    return null;
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -96,8 +106,8 @@ export async function createOrder(orderData: any, token?: string) {
  * Crear items de una orden
  */
 export async function createOrderItems(items: Array<{
-  orderId: number;
-  productId: number;
+  orderId: number | string;
+  productId: number | string;
   productName: string;
   productSku?: string;
   quantity: number;
@@ -176,13 +186,18 @@ export async function getOrderByNumberWithAuth(orderNumber: string, token: strin
   }
 }
 
-export async function getOrderItems(orderId: string | number) {
+export async function getOrderItems(orderId: string | number, token?: string) {
   try {
+    const headers = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
+
     // En Strapi 5, si recibimos un string, es un documentId. Si es un number, es un ID.
     // Usamos documentId preferiblemente para relaciones en Strapi 5.
     const field = typeof orderId === 'string' ? 'documentId' : 'id';
     const response = await api.get(
-      `/order-items?filters[order][${field}][$eq]=${orderId}&populate=*`
+      `/order-items?filters[order][${field}][$eq]=${orderId}&populate=*`,
+      { headers }
     );
 
     return response.data.data;

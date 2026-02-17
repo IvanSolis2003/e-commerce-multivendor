@@ -116,8 +116,8 @@ export function CheckoutForm() {
 
       // Crear los items de la orden
       const orderItemsData = items.map((item) => ({
-        orderId: order.id,
-        productId: item.product.id,
+        orderId: order.documentId || order.id,
+        productId: item.product.documentId || item.product.id,
         productName: item.product.name,
         productSku: item.product.sku || '',
         quantity: item.quantity,

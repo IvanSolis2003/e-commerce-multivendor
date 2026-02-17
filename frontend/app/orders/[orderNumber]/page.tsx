@@ -56,9 +56,15 @@ export default function OrderDetailPage({
         }
 
         setOrder(orderData);
+        console.log('Orden cargada:', orderData);
 
-        // Cargar items de la orden
-        const items = await getOrderItems(orderData.id, token);
+        // Cargar items de la orden - Preferimos documentId en Strapi 5
+        const orderIdentifier = orderData.documentId || orderData.id;
+        console.log('Buscando items para orden:', orderIdentifier, 'con token:', !!token);
+
+        const items = await getOrderItems(orderIdentifier, token);
+        console.log('Items encontrados:', items);
+
         setOrderItems(items);
       } catch (err) {
         console.error('Error al cargar orden:', err);
@@ -239,11 +245,10 @@ export default function OrderDetailPage({
                 <div className="text-sm">
                   <p className="text-gray-600 mb-1">Estado de pago:</p>
                   <p
-                    className={`font-medium ${
-                      order.paymentStatus === 'paid'
-                        ? 'text-green-600'
-                        : 'text-yellow-600'
-                    }`}
+                    className={`font-medium ${order.paymentStatus === 'paid'
+                      ? 'text-green-600'
+                      : 'text-yellow-600'
+                      }`}
                   >
                     {order.paymentStatus === 'paid' && '✅ Pagado'}
                     {order.paymentStatus === 'pending' && '⏳ Pendiente'}

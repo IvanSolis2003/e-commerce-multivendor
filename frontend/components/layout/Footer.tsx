@@ -80,7 +80,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/vendor-signup" className="text-sm hover:text-white transition">
-                  🏪 Vende con Nosotros
+                   Vende con Nosotros
                 </Link>
               </li>
               <li>
