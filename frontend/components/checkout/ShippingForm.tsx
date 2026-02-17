@@ -1,261 +1,319 @@
 'use client';
 
 import { useState } from 'react';
-import type { ShippingAddress } from '@/types/checkout';
-import { validateShippingForm, ValidationError } from '@/lib/utils/validation';
+import type { ShippingFormData } from '@/types/checkout';
 
 interface ShippingFormProps {
-  onSubmit: (address: ShippingAddress) => void;
-  initialData?: Partial<ShippingAddress>;
+  onSubmit: (data: ShippingFormData) => void;
+  initialData?: ShippingFormData;
 }
 
 export function ShippingForm({ onSubmit, initialData }: ShippingFormProps) {
-  const [formData, setFormData] = useState<ShippingAddress>({
-    fullName: initialData?.fullName || '',
-    email: initialData?.email || '',
-    phone: initialData?.phone || '',
-    street: initialData?.street || '',
-    city: initialData?.city || '',
-    state: initialData?.state || '',
-    zipCode: initialData?.zipCode || '',
-    country: initialData?.country || 'Chile',
-    additionalInfo: initialData?.additionalInfo || '',
-  });
+  const [formData, setFormData] = useState<ShippingFormData>(
+    initialData || {
+      fullName: '',
+      email: '',
+      phone: '',
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'Chile',
+      additionalInfo: '',
+    }
+  );
 
-  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Manejar cambios en los inputs
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Limpiar error del campo cuando el usuario empieza a escribir
-    setErrors((prev) => prev.filter((error) => error.field !== name));
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    // Limpiar error al escribir
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
-  // Manejar envío del formulario
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar formulario
-    const validationErrors = validateShippingForm(formData);
-    
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
+    // Validación básica
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'El nombre completo es requerido';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es requerido';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'El teléfono es requerido';
+    }
+
+    if (!formData.street.trim()) {
+      newErrors.street = 'La dirección es requerida';
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = 'La ciudad es requerida';
+    }
+
+    if (!formData.state.trim()) {
+      newErrors.state = 'La región es requerida';
+    }
+
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = 'El código postal es requerido';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    // Si no hay errores, enviar datos
+    // Si no hay errores, continuar
     onSubmit(formData);
   };
 
-  // Helper para obtener el mensaje de error de un campo
-  const getFieldError = (fieldName: string) => {
-    return errors.find((error) => error.field === fieldName)?.message;
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          Información de Envío
-        </h2>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        Información de Envío
+      </h2>
 
-        <div className="space-y-4">
-          {/* Nombre completo */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Nombre Completo */}
+        <div>
+          <label
+            htmlFor="fullName"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Nombre Completo *
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+              errors.fullName ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Juan Pérez"
+          />
+          {errors.fullName && (
+            <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
+          )}
+        </div>
+
+        {/* Email y Teléfono */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Email */}
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre Completo *
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Email *
             </label>
             <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                getFieldError('fullName') ? 'border-red-500' : 'border-gray-300'
+                errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Juan Pérez González"
+              placeholder="juan@ejemplo.com"
             />
-            {getFieldError('fullName') && (
-              <p className="mt-1 text-sm text-red-500">{getFieldError('fullName')}</p>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
             )}
           </div>
 
-          {/* Email y Teléfono en una fila */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  getFieldError('email') ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="correo@ejemplo.com"
-              />
-              {getFieldError('email') && (
-                <p className="mt-1 text-sm text-red-500">{getFieldError('email')}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono *
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  getFieldError('phone') ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="+56912345678"
-              />
-              {getFieldError('phone') && (
-                <p className="mt-1 text-sm text-red-500">{getFieldError('phone')}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Dirección */}
+          {/* Teléfono */}
           <div>
-            <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
-              Dirección *
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Teléfono *
             </label>
             <input
-              type="text"
-              id="street"
-              name="street"
-              value={formData.street}
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                getFieldError('street') ? 'border-red-500' : 'border-gray-300'
+                errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Av. Libertador Bernardo O'Higgins 1234"
+              placeholder="+56912345678"
             />
-            {getFieldError('street') && (
-              <p className="mt-1 text-sm text-red-500">{getFieldError('street')}</p>
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
             )}
-          </div>
-
-          {/* Ciudad, Región, Código Postal */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                Ciudad *
-              </label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  getFieldError('city') ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Santiago"
-              />
-              {getFieldError('city') && (
-                <p className="mt-1 text-sm text-red-500">{getFieldError('city')}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                Región *
-              </label>
-              <input
-                type="text"
-                id="state"
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  getFieldError('state') ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Región Metropolitana"
-              />
-              {getFieldError('state') && (
-                <p className="mt-1 text-sm text-red-500">{getFieldError('state')}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
-                Código Postal *
-              </label>
-              <input
-                type="text"
-                id="zipCode"
-                name="zipCode"
-                value={formData.zipCode}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  getFieldError('zipCode') ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="8320000"
-              />
-              {getFieldError('zipCode') && (
-                <p className="mt-1 text-sm text-red-500">{getFieldError('zipCode')}</p>
-              )}
-            </div>
-          </div>
-
-          {/* País */}
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-              País *
-            </label>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                getFieldError('country') ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Chile"
-            />
-            {getFieldError('country') && (
-              <p className="mt-1 text-sm text-red-500">{getFieldError('country')}</p>
-            )}
-          </div>
-
-          {/* Información adicional (opcional) */}
-          <div>
-            <label htmlFor="additionalInfo" className="block text-sm font-medium text-gray-700 mb-1">
-              Información Adicional (Opcional)
-            </label>
-            <textarea
-              id="additionalInfo"
-              name="additionalInfo"
-              value={formData.additionalInfo}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Ej: Departamento 302, tocar timbre, etc."
-            />
           </div>
         </div>
-      </div>
 
-      {/* Botón de envío */}
-      <button
-        type="submit"
-        className="w-full bg-indigo-600 text-white py-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
-      >
-        Continuar al Pago
-      </button>
-    </form>
+        {/* Dirección */}
+        <div>
+          <label
+            htmlFor="street"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Dirección *
+          </label>
+          <input
+            type="text"
+            id="street"
+            name="street"
+            value={formData.street}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+              errors.street ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Calle Principal 123, Depto 4B"
+          />
+          {errors.street && (
+            <p className="mt-1 text-sm text-red-600">{errors.street}</p>
+          )}
+        </div>
+
+        {/* Ciudad, Región y Código Postal */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Ciudad */}
+          <div>
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Ciudad *
+            </label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                errors.city ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Santiago"
+            />
+            {errors.city && (
+              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+            )}
+          </div>
+
+          {/* Región */}
+          <div>
+            <label
+              htmlFor="state"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Región *
+            </label>
+            <input
+              type="text"
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                errors.state ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Metropolitana"
+            />
+            {errors.state && (
+              <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+            )}
+          </div>
+
+          {/* Código Postal */}
+          <div>
+            <label
+              htmlFor="zipCode"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Código Postal *
+            </label>
+            <input
+              type="text"
+              id="zipCode"
+              name="zipCode"
+              value={formData.zipCode}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                errors.zipCode ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="8320000"
+            />
+            {errors.zipCode && (
+              <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>
+            )}
+          </div>
+        </div>
+
+        {/* País */}
+        <div>
+          <label
+            htmlFor="country"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            País *
+          </label>
+          <input
+            type="text"
+            id="country"
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Chile"
+          />
+        </div>
+
+        {/* Información Adicional */}
+        <div>
+          <label
+            htmlFor="additionalInfo"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Información Adicional (Opcional)
+          </label>
+          <textarea
+            id="additionalInfo"
+            name="additionalInfo"
+            value={formData.additionalInfo}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Instrucciones de entrega, referencias, etc."
+          />
+        </div>
+
+        {/* Botón Submit */}
+        <button
+          type="submit"
+          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+        >
+          Continuar al Pago
+        </button>
+      </form>
+    </div>
   );
 }

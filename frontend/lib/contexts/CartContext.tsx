@@ -16,6 +16,7 @@ export interface CartItem {
 // Funciones disponibles del carrito
 interface CartContextType {
   items: CartItem[];                           // Lista de items
+  isLoaded: boolean;                           // Si ya cargó desde localStorage
   addItem: (product: Product) => void;         // Agregar producto
   removeItem: (productId: number) => void;     // Eliminar producto
   updateQuantity: (productId: number, quantity: number) => void; // Cambiar cantidad
@@ -36,7 +37,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   // Estado: lista de items en el carrito
   const [items, setItems] = useState<CartItem[]>([]);
-  
+
   // Estado: indica si ya cargamos desde localStorage
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -151,6 +152,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ============================================================
   const value = {
     items,
+    isLoaded,
     addItem,
     removeItem,
     updateQuantity,

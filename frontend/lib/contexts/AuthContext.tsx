@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginData) => {
     try {
       const response: AuthResponse = await loginUser(data);
-      
+
       // Guardar en estado
       setToken(response.jwt);
       setUser(response.user);
@@ -73,9 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Guardar en localStorage
       localStorage.setItem('auth_token', response.jwt);
       localStorage.setItem('auth_user', JSON.stringify(response.user));
-
-      // Redirigir a home
-      router.push('/');
     } catch (error: any) {
       console.error('Error en login:', error);
       throw new Error(error.message || 'Error al iniciar sesión');
@@ -88,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData) => {
     try {
       const response: AuthResponse = await registerUser(data);
-      
+
       // Guardar en estado
       setToken(response.jwt);
       setUser(response.user);
@@ -96,9 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Guardar en localStorage
       localStorage.setItem('auth_token', response.jwt);
       localStorage.setItem('auth_user', JSON.stringify(response.user));
-
-      // Redirigir a home
-      router.push('/');
     } catch (error: any) {
       console.error('Error en registro:', error);
       throw new Error(error.message || 'Error al registrarse');

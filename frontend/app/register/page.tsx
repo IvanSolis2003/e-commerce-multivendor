@@ -23,19 +23,20 @@ export default function RegisterPage() {
     errors: string[];
   }>({ isValid: false, errors: [] });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Redirigir correctamente si ya está autenticado (SIN hacerlo en render)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isSuccess) {
       router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isSuccess]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData({
       ...formData,
       [name]: value,
@@ -56,10 +57,10 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validar formulario completo
     const validationErrors = validateRegistrationForm(formData);
-    
+
     if (validationErrors.length > 0) {
       const errorMap: Record<string, string> = {};
       validationErrors.forEach((error) => {
@@ -77,7 +78,14 @@ export default function RegisterPage() {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
-      // La redirección se maneja en AuthContext
+
+      setIsSuccess(true);
+      setIsLoading(false);
+
+      // Redirigir después de 2.5 segundos para mostrar el mensaje
+      setTimeout(() => {
+        router.push('/');
+      }, 2500);
     } catch (err: any) {
       // Manejar errores específicos de Strapi
       if (err.message.includes('username')) {
@@ -105,6 +113,17 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {/* Mensaje de éxito */}
+          {isSuccess && (
+            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-3">
+              <span className="text-2xl">✅</span>
+              <div>
+                <p className="font-bold">¡Cuenta creada con éxito!</p>
+                <p className="text-sm">Redirigiendo al inicio...</p>
+              </div>
+            </div>
+          )}
+
           {/* Mensaje de error general */}
           {errors.general && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -126,9 +145,8 @@ export default function RegisterPage() {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  errors.username ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.username ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="usuario123"
                 disabled={isLoading}
               />
@@ -152,9 +170,8 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="tu@email.com"
                 disabled={isLoading}
               />
@@ -176,9 +193,8 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
@@ -193,7 +209,7 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
               )}
-              
+
               {formData.password.length > 0 && (
                 <div className="mt-2 space-y-1">
                   <p className="text-xs font-medium text-gray-700">
@@ -223,9 +239,8 @@ export default function RegisterPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
@@ -267,9 +282,8 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition ${
-                isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -1,134 +1,197 @@
 'use client';
 
 import { useState } from 'react';
-import type { PaymentMethod as PaymentMethodType } from '@/types/checkout';
 
 interface PaymentMethodProps {
-  onSelect: (method: PaymentMethodType) => void;
-  selectedMethod?: PaymentMethodType;
+  onSelect: (data: { paymentMethod: 'credit_card' | 'debit_card' | 'cash_on_delivery' }) => void;
+  onBack: () => void;
+  isProcessing: boolean;
+  initialData?: { paymentMethod: 'credit_card' | 'debit_card' | 'cash_on_delivery' };
 }
 
-interface PaymentOption {
-  id: PaymentMethodType;
-  name: string;
-  description: string;
-  icon: string;
-  enabled: boolean;
-}
+export function PaymentMethod({
+  onSelect,
+  onBack,
+  isProcessing,
+  initialData,
+}: PaymentMethodProps) {
+  const [selectedMethod, setSelectedMethod] = useState(
+    initialData?.paymentMethod || 'debit_card'
+  );
 
-const paymentOptions: PaymentOption[] = [
-  {
-    id: 'credit_card',
-    name: 'Tarjeta de Crédito',
-    description: 'Visa, Mastercard, American Express',
-    icon: '💳',
-    enabled: true,
-  },
-  {
-    id: 'debit_card',
-    name: 'Tarjeta de Débito',
-    description: 'Redcompra',
-    icon: '💰',
-    enabled: true,
-  },
-  {
-    id: 'paypal',
-    name: 'PayPal',
-    description: 'Paga de forma segura con tu cuenta PayPal',
-    icon: '🅿️',
-    enabled: false, // Deshabilitado por ahora
-  },
-  {
-    id: 'stripe',
-    name: 'Stripe',
-    description: 'Procesador de pagos internacional',
-    icon: '💵',
-    enabled: false, // Deshabilitado por ahora
-  },
-  {
-    id: 'cash_on_delivery',
-    name: 'Pago contra entrega',
-    description: 'Paga en efectivo cuando recibas tu pedido',
-    icon: '🏠',
-    enabled: true,
-  },
-];
-
-export function PaymentMethod({ onSelect, selectedMethod }: PaymentMethodProps) {
-  const [selected, setSelected] = useState<PaymentMethodType | undefined>(selectedMethod);
-
-  const handleSelect = (methodId: PaymentMethodType) => {
-    setSelected(methodId);
-    onSelect(methodId);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSelect({ paymentMethod: selectedMethod as 'credit_card' | 'debit_card' | 'cash_on_delivery' });
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">
-        Método de Pago
-      </h2>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Método de Pago</h2>
 
-      <div className="space-y-3">
-        {paymentOptions.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => option.enabled && handleSelect(option.id)}
-            disabled={!option.enabled}
-            className={`w-full p-4 rounded-lg border-2 text-left transition ${
-              selected === option.id
-                ? 'border-indigo-600 bg-indigo-50'
-                : option.enabled
-                ? 'border-gray-300 hover:border-indigo-300'
-                : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              {/* Radio button personalizado */}
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  selected === option.id
-                    ? 'border-indigo-600'
-                    : 'border-gray-300'
-                }`}
-              >
-                {selected === option.id && (
-                  <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
-                )}
-              </div>
-
-              {/* Icono */}
-              <span className="text-3xl">{option.icon}</span>
-
-              {/* Información */}
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-gray-900">{option.name}</p>
-                  {!option.enabled && (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
-                      Próximamente
-                    </span>
-                  )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Tarjeta de Crédito */}
+        <label
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
+            selectedMethod === 'credit_card'
+              ? 'border-indigo-600 bg-indigo-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+        >
+          <div className="flex items-center">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="credit_card"
+              checked={selectedMethod === 'credit_card'}
+              onChange={(e) => setSelectedMethod(e.target.value)}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <div className="ml-4 flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💳</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Tarjeta de Crédito</p>
+                  <p className="text-sm text-gray-600">
+                    Visa, Mastercard, American Express
+                  </p>
                 </div>
-                <p className="text-sm text-gray-500">{option.description}</p>
               </div>
             </div>
-          </button>
-        ))}
-      </div>
+          </div>
+        </label>
 
-      {/* Mensaje de seguridad */}
-      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">🔒</span>
-          <div>
-            <p className="font-semibold text-green-800">Pago Seguro</p>
-            <p className="text-sm text-green-700">
-              Tus datos están protegidos con encriptación SSL de 256 bits
-            </p>
+        {/* Tarjeta de Débito */}
+        <label
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
+            selectedMethod === 'debit_card'
+              ? 'border-indigo-600 bg-indigo-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+        >
+          <div className="flex items-center">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="debit_card"
+              checked={selectedMethod === 'debit_card'}
+              onChange={(e) => setSelectedMethod(e.target.value)}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <div className="ml-4 flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💰</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Tarjeta de Débito</p>
+                  <p className="text-sm text-gray-600">Redcompra</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </label>
+
+        {/* PayPal - Próximamente */}
+        <div className="block border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
+          <div className="flex items-center">
+            <input type="radio" disabled className="w-4 h-4" />
+            <div className="ml-4 flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🅿️</span>
+                <div>
+                  <p className="font-semibold text-gray-600">
+                    PayPal{' '}
+                    <span className="text-xs bg-gray-200 px-2 py-1 rounded">
+                      Próximamente
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Paga de forma segura con tu cuenta PayPal
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Stripe - Próximamente */}
+        <div className="block border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
+          <div className="flex items-center">
+            <input type="radio" disabled className="w-4 h-4" />
+            <div className="ml-4 flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💳</span>
+                <div>
+                  <p className="font-semibold text-gray-600">
+                    Stripe{' '}
+                    <span className="text-xs bg-gray-200 px-2 py-1 rounded">
+                      Próximamente
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Procesador de pagos internacional
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pago contra entrega */}
+        <label
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
+            selectedMethod === 'cash_on_delivery'
+              ? 'border-indigo-600 bg-indigo-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+        >
+          <div className="flex items-center">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cash_on_delivery"
+              checked={selectedMethod === 'cash_on_delivery'}
+              onChange={(e) => setSelectedMethod(e.target.value)}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <div className="ml-4 flex-1">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🏠</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Pago contra entrega</p>
+                  <p className="text-sm text-gray-600">
+                    Paga en efectivo cuando recibas tu pedido
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </label>
+
+        {/* Botones */}
+        <div className="flex gap-4 pt-4">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isProcessing}
+            className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Volver
+          </button>
+          <button
+            type="submit"
+            disabled={isProcessing}
+            className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin">⏳</span>
+                Procesando...
+              </span>
+            ) : (
+              'Confirmar Pedido'
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

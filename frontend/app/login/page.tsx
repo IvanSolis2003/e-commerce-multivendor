@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { isValidEmail } from '@/lib/utils/validation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,19 +17,21 @@ export default function LoginPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
 
-  // Si ya está autenticado, redirigir
-  if (isAuthenticated) {
-    router.push('/');
-    return null;
-  }
+  // Si ya está autenticado, redirigir (respetando el mensaje de éxito)
+  useEffect(() => {
+    if (isAuthenticated && !isSuccess) {
+      router.push('/');
+    }
+  }, [isAuthenticated, isSuccess, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData({
       ...formData,
       [name]: value,
@@ -98,11 +100,16 @@ export default function LoginPage() {
         identifier: formData.identifier.trim().toLowerCase(),
         password: formData.password,
       });
-      
+
       // Resetear intentos en login exitoso
       setLoginAttempts(0);
-      
-      // La redirección se maneja en AuthContext
+      setIsSuccess(true);
+      setIsLoading(false);
+
+      // Redirigir después de 2 segundos para mostrar bienvenida
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
     } catch (err: any) {
       // Incrementar intentos fallidos
       const newAttempts = loginAttempts + 1;
@@ -114,7 +121,7 @@ export default function LoginPage() {
         setErrors({
           general: 'Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente por 5 minutos.',
         });
-        
+
         // Desbloquear después de 5 minutos
         setTimeout(() => {
           setIsBlocked(false);
@@ -127,7 +134,7 @@ export default function LoginPage() {
           general: `Usuario o contraseña incorrectos. Intentos restantes: ${remainingAttempts}`,
         });
       }
-      
+
       setIsLoading(false);
     }
   };
@@ -146,6 +153,17 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Mensaje de bienvenida */}
+          {isSuccess && (
+            <div className="mb-6 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-3 rounded-lg flex items-center gap-3 animate-pulse">
+              <span className="text-2xl">👋</span>
+              <div>
+                <p className="font-bold">¡Bienvenido de nuevo!</p>
+                <p className="text-sm">Iniciando sesión...</p>
+              </div>
+            </div>
+          )}
+
           {/* Mensaje de advertencia si hay intentos fallidos */}
           {loginAttempts > 0 && loginAttempts < 5 && (
             <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
@@ -158,11 +176,10 @@ export default function LoginPage() {
 
           {/* Mensaje de error */}
           {errors.general && (
-            <div className={`mb-6 border px-4 py-3 rounded-lg ${
-              isBlocked 
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : 'bg-red-50 border-red-200 text-red-700'
-            }`}>
+            <div className={`mb-6 border px-4 py-3 rounded-lg ${isBlocked
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : 'bg-red-50 border-red-200 text-red-700'
+              }`}>
               <p className="text-sm flex items-center gap-2">
                 <span>{isBlocked ? '🚫' : '❌'}</span>
                 <span>{errors.general}</span>
@@ -185,9 +202,8 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
                 autoComplete="username"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                  errors.identifier ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.identifier ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="tu@email.com o usuario123"
                 disabled={isLoading || isBlocked}
               />
@@ -210,9 +226,8 @@ export default function LoginPage() {
                   onChange={handleChange}
                   required
                   autoComplete="current-password"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent pr-12 ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent pr-12 ${errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="••••••••"
                   disabled={isLoading || isBlocked}
                 />
@@ -246,8 +261,8 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="text-indigo-600 hover:text-indigo-700 font-medium"
                 >
                   ¿Olvidaste tu contraseña?
@@ -259,11 +274,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || isBlocked}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition ${
-                isLoading || isBlocked
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition ${isLoading || isBlocked
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -286,7 +300,7 @@ export default function LoginPage() {
             <p className="text-xs text-blue-800 flex items-start gap-2">
               <span className="text-sm">🔒</span>
               <span>
-                Tu información está protegida con encriptación SSL. 
+                Tu información está protegida con encriptación SSL.
                 Nunca compartimos tus datos con terceros.
               </span>
             </p>

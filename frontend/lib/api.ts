@@ -54,6 +54,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 // ============================================================
 // Función helper para construir URLs de imágenes
 // ============================================================
+
 export function getStrapiMedia(url: string | undefined): string {
   if (!url) return '/placeholder.jpg';
   if (url.startsWith('http')) return url;
@@ -73,6 +74,8 @@ export async function createOrder(orderData: any, token?: string) {
       ? { Authorization: `Bearer ${token}` }
       : {};
 
+    // El backend auto-asigna el usuario autenticado basado en el token JWT
+
     const response = await api.post(
       '/orders',
       {
@@ -82,11 +85,12 @@ export async function createOrder(orderData: any, token?: string) {
     );
 
     return response.data.data;
-  } catch (error) {
-    console.error('Error al crear la orden:', error);
+  } catch (error: any) {
+    console.error('Error al crear la orden:', error?.response?.data || error);
     throw error;
   }
 }
+
 
 /**
  * Crear items de una orden
@@ -106,7 +110,6 @@ export async function createOrderItems(items: Array<{
       ? { Authorization: `Bearer ${token}` }
       : {};
 
-    // Crear todos los items en paralelo
     const promises = items.map((item) =>
       api.post(
         '/order-items',
@@ -138,19 +141,16 @@ export async function createOrderItems(items: Array<{
 // Funciones para obtener órdenes del usuario
 // ============================================================
 
-/**
- * Obtener todas las órdenes (filtradas por usuario si tiene token)
- */
 export async function getUserOrders(token?: string) {
   try {
     const headers = token
       ? { Authorization: `Bearer ${token}` }
       : {};
 
-    const response = await api.get('/orders?populate=*&sort=createdAt:desc', {
+    const response = await api.get('/orders', {
       headers,
     });
-    
+
     return response.data.data;
   } catch (error) {
     console.error('Error al obtener órdenes:', error);
@@ -158,20 +158,17 @@ export async function getUserOrders(token?: string) {
   }
 }
 
-/**
- * Obtener una orden específica por número
- */
-export async function getOrderByNumberWithAuth(orderNumber: string, token?: string) {
+export async function getOrderByNumberWithAuth(orderNumber: string, token: string) {
   try {
-    const headers = token
-      ? { Authorization: `Bearer ${token}` }
-      : {};
-
     const response = await api.get(
       `/orders?filters[orderNumber][$eq]=${orderNumber}&populate=*`,
-      { headers }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
-    
+
     return response.data.data[0] || null;
   } catch (error) {
     console.error('Error al obtener la orden:', error);
@@ -179,20 +176,15 @@ export async function getOrderByNumberWithAuth(orderNumber: string, token?: stri
   }
 }
 
-/**
- * Obtener items de una orden
- */
-export async function getOrderItems(orderId: number, token?: string) {
+export async function getOrderItems(orderId: string | number) {
   try {
-    const headers = token
-      ? { Authorization: `Bearer ${token}` }
-      : {};
-
+    // En Strapi 5, si recibimos un string, es un documentId. Si es un number, es un ID.
+    // Usamos documentId preferiblemente para relaciones en Strapi 5.
+    const field = typeof orderId === 'string' ? 'documentId' : 'id';
     const response = await api.get(
-      `/order-items?filters[order][id][$eq]=${orderId}&populate=*`,
-      { headers }
+      `/order-items?filters[order][${field}][$eq]=${orderId}&populate=*`
     );
-    
+
     return response.data.data;
   } catch (error) {
     console.error('Error al obtener items de la orden:', error);
@@ -204,9 +196,6 @@ export async function getOrderItems(orderId: number, token?: string) {
 // Funciones de autenticación
 // ============================================================
 
-/**
- * Registrar un nuevo usuario
- */
 export async function registerUser(data: {
   username: string;
   email: string;
@@ -220,9 +209,6 @@ export async function registerUser(data: {
   }
 }
 
-/**
- * Iniciar sesión
- */
 export async function loginUser(data: { identifier: string; password: string }) {
   try {
     const response = await axios.post(`${API_URL}/api/auth/local`, data);
@@ -232,15 +218,23 @@ export async function loginUser(data: { identifier: string; password: string }) 
   }
 }
 
-/**
- * Obtener información del usuario actual
- */
 export async function getCurrentUser(token: string) {
   try {
     const response = await axios.get(`${API_URL}/api/users/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data?.error || error;
+  }
+}
+
+export async function forgotPassword(email: string) {
+  try {
+    const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+      email,
     });
     return response.data;
   } catch (error: any) {
