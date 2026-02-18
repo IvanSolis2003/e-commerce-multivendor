@@ -1,3 +1,4 @@
+# Multi-stage build for Strapi 5
 FROM node:20-alpine as build
 RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev > /dev/null 2>&1
 
@@ -8,14 +9,10 @@ COPY . .
 RUN rm -rf dist
 RUN npm run build
 
-# === CRÍTICO: Copiar manualmente archivos de configuración JS a dist/ ===
-# Strapi build no copia archivos .js automáticamente si TypeScript está activo
+# Copiar manualmente archivos de configuración JS a dist/ (necesario para Strapi 5 + Docker)
 RUN mkdir -p dist/config 
-RUN cp config/database.js dist/config/database.js || echo "Aviso: config/database.js no encontrado"
-RUN cp config/plugins.js dist/config/plugins.js || echo "Aviso: config/plugins.js no encontrado"
-
-# === DIAGNÓSTICO FINAL ===
-RUN echo "=== FILES IN dist/config/ ===" && ls -la dist/config/ 
+RUN cp config/database.js dist/config/database.js
+RUN cp config/plugins.js dist/config/plugins.js
 
 FROM node:20-alpine
 RUN apk add --no-cache vips-dev
