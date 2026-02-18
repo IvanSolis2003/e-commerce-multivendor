@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getOrderByNumberWithAuth } from '@/lib/api';
 import { formatPrice } from '@/lib/utils/format';
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { token, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -204,5 +204,17 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin text-4xl">⏳</div>
+      </div>
+    }>
+      <OrderConfirmationContent />
+    </Suspense>
   );
 }
