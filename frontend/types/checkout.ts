@@ -12,6 +12,8 @@ export interface ShippingAddress {
   additionalInfo?: string;
 }
 
+export type ShippingFormData = ShippingAddress;
+
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'paypal' | 'stripe' | 'cash_on_delivery';
 
 export interface CheckoutFormData {
