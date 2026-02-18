@@ -31,11 +31,10 @@ export function PaymentMethod({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Tarjeta de Crédito */}
         <label
-          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
-            selectedMethod === 'credit_card'
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${selectedMethod === 'credit_card'
               ? 'border-indigo-600 bg-indigo-50'
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+            }`}
         >
           <div className="flex items-center">
             <input
@@ -43,7 +42,7 @@ export function PaymentMethod({
               name="paymentMethod"
               value="credit_card"
               checked={selectedMethod === 'credit_card'}
-              onChange={(e) => setSelectedMethod(e.target.value)}
+              onChange={(e) => setSelectedMethod(e.target.value as 'credit_card' | 'debit_card' | 'cash_on_delivery')}
               className="w-4 h-4 text-indigo-600"
             />
             <div className="ml-4 flex-1">
@@ -62,11 +61,10 @@ export function PaymentMethod({
 
         {/* Tarjeta de Débito */}
         <label
-          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
-            selectedMethod === 'debit_card'
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${selectedMethod === 'debit_card'
               ? 'border-indigo-600 bg-indigo-50'
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+            }`}
         >
           <div className="flex items-center">
             <input
@@ -137,11 +135,10 @@ export function PaymentMethod({
 
         {/* Pago contra entrega */}
         <label
-          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${
-            selectedMethod === 'cash_on_delivery'
+          className={`block border-2 rounded-lg p-4 cursor-pointer transition ${selectedMethod === 'cash_on_delivery'
               ? 'border-indigo-600 bg-indigo-50'
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+            }`}
         >
           <div className="flex items-center">
             <input
