@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { getFeaturedProducts } from '@/lib/api';
 import { ProductCard } from '@/components/products/ProductCard';
 
+export const revalidate = 60; // Revalidar cada 60 segundos
+
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
 
@@ -76,7 +78,7 @@ export default async function HomePage() {
             <p className="text-xl mb-8 text-purple-100 max-w-2xl mx-auto">
               Únete a cientos de vendedores exitosos, aumenta tus ventas y alcanza miles de clientes
             </p>
-            
+
             {/* Beneficios */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
               {/* Tarjeta 1: Aumenta tus Ventas */}
