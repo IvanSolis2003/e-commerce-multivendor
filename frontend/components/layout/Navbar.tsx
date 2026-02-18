@@ -11,11 +11,11 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const router = useRouter();
   const { getItemCount } = useCart();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
-  
+
   const itemCount = getItemCount();
 
   // Manejar búsqueda
@@ -35,32 +35,32 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-indigo-600">
-               IASM20-SHOP
+              IASM20-SHOP
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-gray-700 hover:text-indigo-600 font-medium transition"
             >
               Inicio
             </Link>
-            <Link 
-              href="/products" 
+            <Link
+              href="/products"
               className="text-gray-700 hover:text-indigo-600 font-medium transition"
             >
               Productos
             </Link>
-            <Link 
-              href="/categories" 
+            <Link
+              href="/categories"
               className="text-gray-700 hover:text-indigo-600 font-medium transition"
             >
               Categorías
             </Link>
-            <Link 
-              href="/vendors" 
+            <Link
+              href="/vendors"
               className="text-gray-700 hover:text-indigo-600 font-medium transition"
             >
               Tiendas
@@ -89,8 +89,8 @@ export default function Navbar() {
           {/* Right side - Cart & Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Cart */}
-            <Link 
-              href="/cart" 
+            <Link
+              href="/cart"
               className="relative p-2 hover:bg-gray-100 rounded-full transition"
             >
               <span className="text-2xl">🛒</span>
@@ -127,7 +127,7 @@ export default function Navbar() {
                         {user.email}
                       </p>
                     </div>
-                    
+
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -135,7 +135,7 @@ export default function Navbar() {
                     >
                       👤 Mi Perfil
                     </Link>
-                    
+
                     <Link
                       href="/orders"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -143,7 +143,7 @@ export default function Navbar() {
                     >
                       📦 Mis Pedidos
                     </Link>
-                    
+
                     <Link
                       href="/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -151,7 +151,7 @@ export default function Navbar() {
                     >
                       ⚙️ Configuración
                     </Link>
-                    
+
                     <div className="border-t border-gray-200 mt-2 pt-2">
                       <button
                         onClick={() => {
@@ -169,15 +169,15 @@ export default function Navbar() {
             ) : (
               /* Usuario no logueado */
               <>
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-gray-700 hover:text-indigo-600 font-medium transition"
                 >
                   Iniciar Sesión
                 </Link>
-                
-                <Link 
-                  href="/register" 
+
+                <Link
+                  href="/register"
                   className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
                 >
                   Registrarse
@@ -197,8 +197,8 @@ export default function Navbar() {
             </button>
 
             {/* Cart - Mobile */}
-            <Link 
-              href="/cart" 
+            <Link
+              href="/cart"
               className="relative p-2 hover:bg-gray-100 rounded-full transition"
             >
               <span className="text-xl">🛒</span>
@@ -223,28 +223,28 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-3">
-              <Link href="/" className="px-4 py-2 hover:bg-gray-100 rounded">
+              <Link href="/" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                 Inicio
               </Link>
-              <Link href="/products" className="px-4 py-2 hover:bg-gray-100 rounded">
+              <Link href="/products" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                 Productos
               </Link>
-              <Link href="/categories" className="px-4 py-2 hover:bg-gray-100 rounded">
+              <Link href="/categories" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                 Categorías
               </Link>
-              <Link href="/vendors" className="px-4 py-2 hover:bg-gray-100 rounded">
+              <Link href="/vendors" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                 Tiendas
               </Link>
-              
+
               {isAuthenticated && user ? (
                 <>
                   <div className="px-4 py-2 border-t border-gray-200 mt-2 pt-3">
                     <p className="text-sm text-gray-500 mb-1">Hola, {user.username}</p>
                   </div>
-                  <Link href="/profile" className="px-4 py-2 hover:bg-gray-100 rounded">
+                  <Link href="/profile" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                     👤 Mi Perfil
                   </Link>
-                  <Link href="/orders" className="px-4 py-2 hover:bg-gray-100 rounded">
+                  <Link href="/orders" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                     📦 Mis Pedidos
                   </Link>
                   <button
@@ -256,7 +256,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="px-4 py-2 hover:bg-gray-100 rounded">
+                  <Link href="/login" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                     Iniciar Sesión
                   </Link>
                   <Link href="/register" className="px-4 py-2 bg-indigo-600 text-white rounded text-center">

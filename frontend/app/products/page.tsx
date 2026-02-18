@@ -50,7 +50,7 @@ export default async function ProductsPage({
           {/* Sidebar - Filtros */}
           <aside className="lg:w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-20">
-              <h2 className="text-xl font-bold mb-4">Filtros</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Filtros</h2>
 
               {/* Búsqueda */}
               <div className="mb-6">
@@ -70,7 +70,7 @@ export default async function ProductsPage({
 
               {/* Categorías */}
               <div>
-                <h3 className="font-semibold mb-3">Categorías</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Categorías</h3>
                 <ul className="space-y-2">
                   {/* Opción "Todas" */}
                   <li>
