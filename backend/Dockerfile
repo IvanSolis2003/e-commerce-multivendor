@@ -8,12 +8,14 @@ COPY . .
 RUN rm -rf dist
 RUN npm run build
 
-# === CRÍTICO: Copiar manualmente el archivo de configuración a dist/ ===
-# Como estamos usando database.js, necesitamos asegurarnos de que esté en dist/
-RUN mkdir -p dist/config && cp config/database.js dist/config/database.js || echo "Aviso: config/database.js no encontrado, saltando copia"
+# === CRÍTICO: Copiar manualmente archivos de configuración JS a dist/ ===
+# Strapi build no copia archivos .js automáticamente si TypeScript está activo
+RUN mkdir -p dist/config 
+RUN cp config/database.js dist/config/database.js || echo "Aviso: config/database.js no encontrado"
+RUN cp config/plugins.js dist/config/plugins.js || echo "Aviso: config/plugins.js no encontrado"
 
-# === DIAGNÓSTICO ===
-RUN echo "=== FILES IN dist/config/ ===" && ls -la dist/config/ && echo "=== CONTENT OF dist/config/database.js ===" && cat dist/config/database.js
+# === DIAGNÓSTICO FINAL ===
+RUN echo "=== FILES IN dist/config/ ===" && ls -la dist/config/ 
 
 FROM node:20-alpine
 RUN apk add --no-cache vips-dev
