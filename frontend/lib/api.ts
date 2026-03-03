@@ -54,6 +54,32 @@ export async function getVendors(): Promise<Vendor[]> {
   return response.data.data;
 }
 
+export async function getVendorById(identifier: string): Promise<Vendor | null> {
+  try {
+    const field = isNaN(Number(identifier)) ? 'documentId' : 'id';
+    const response = await api.get<StrapiResponse<Vendor[]>>(
+      `/vendors?filters[${field}][$eq]=${identifier}&populate=*`
+    );
+    return response.data.data[0] || null;
+  } catch (error) {
+    console.error('Error al obtener el vendedor:', error);
+    return null;
+  }
+}
+
+export async function getProductsByVendorId(vendorIdentifier: string): Promise<Product[]> {
+  try {
+    const field = isNaN(Number(vendorIdentifier)) ? 'documentId' : 'id';
+    const response = await api.get<StrapiResponse<Product[]>>(
+      `/products?filters[vendor][${field}][$eq]=${vendorIdentifier}&populate=*&pagination[pageSize]=100`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error al obtener productos del vendedor:', error);
+    return [];
+  }
+}
+
 export async function getFeaturedProducts(): Promise<Product[]> {
   const response = await api.get<StrapiResponse<Product[]>>(
     '/products?filters[featured][$eq]=true&populate=*'
