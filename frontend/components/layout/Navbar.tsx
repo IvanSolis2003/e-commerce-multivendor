@@ -247,6 +247,9 @@ export default function Navbar() {
                   <Link href="/orders" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
                     📦 Mis Pedidos
                   </Link>
+                  <Link href="/settings" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                    ⚙️ Configuración
+                  </Link>
                   <button
                     onClick={logout}
                     className="px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded"
