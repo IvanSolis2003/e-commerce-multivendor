@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getFeaturedProducts } from '@/lib/api';
 import { ProductCard } from '@/components/products/ProductCard';
 
-export const revalidate = 60; // Revalidar cada 60 segundos
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getVendors } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VendorsPage() {
   // Obtener todos los vendedores desde Strapi
   const vendors = await getVendors();
@@ -47,7 +49,7 @@ export default async function VendorsPage() {
 function VendorCard({ vendor }: { vendor: any }) {
   // Obtener productos del vendedor (si existe la relación)
   const productCount = vendor.products?.length || 0;
-  
+
   // Rating y ventas
   const rating = vendor.rating || 0;
   const totalSales = vendor.totalSales || 0;
