@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getVendorById, getStrapiMedia, getProductsByVendorId } from '@/lib/api';
-import ProductCard from '@/components/products/ProductCard'; // Assuming this exists based on standard e-commerce projects
+import { ProductCard } from '@/components/products/ProductCard'; // Assuming this exists based on standard e-commerce projects
 
 export default async function VendorDetailsPage({
     params,
@@ -17,7 +17,7 @@ export default async function VendorDetailsPage({
 
     const products = await getProductsByVendorId(params.id);
     const rating = vendor.rating || 0;
-    const isVerified = vendor.isVerified || false; // Used in vendor search but checking if it exists
+    const isVerified = vendor.isApproved || false; // Used in vendor search but checking if it exists
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
