@@ -2,20 +2,23 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getVendorById, getStrapiMedia, getProductsByVendorId } from '@/lib/api';
-import { ProductCard } from '@/components/products/ProductCard'; // Assuming this exists based on standard e-commerce projects
+import { ProductCard } from '@/components/products/ProductCard';
+
+export const dynamic = 'force-dynamic';
 
 export default async function VendorDetailsPage({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
-    const vendor = await getVendorById(params.id);
+    const { id } = await params;
+    const vendor = await getVendorById(id);
 
     if (!vendor) {
         notFound();
     }
 
-    const products = await getProductsByVendorId(params.id);
+    const products = await getProductsByVendorId(id);
     const rating = vendor.rating || 0;
     const isVerified = vendor.isApproved || false; // Used in vendor search but checking if it exists
 

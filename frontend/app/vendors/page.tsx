@@ -124,7 +124,7 @@ function VendorCard({ vendor }: { vendor: any }) {
 
         {/* Botón */}
         <Link
-          href={`/vendors/${vendor.id}`}
+          href={`/vendors/${vendor.documentId}`}
           className="block w-full text-center bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
         >
           Ver Tienda
