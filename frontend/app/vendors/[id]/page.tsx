@@ -70,7 +70,10 @@ export default async function VendorDetailsPage({
                         </div>
 
                         <p className="text-gray-600 mb-6 max-w-2xl text-lg">
-                            {vendor.storeDescription || 'Bienvenido a nuestra tienda. Explorá nuestros productos de alta calidad.'}
+                            {typeof vendor.storeDescription === 'string'
+                                ? vendor.storeDescription
+                                : vendor.storeDescription?.[0]?.children?.[0]?.text
+                                || 'Bienvenido a nuestra tienda. Explorá nuestros productos de alta calidad.'}
                         </p>
 
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm text-gray-600">
