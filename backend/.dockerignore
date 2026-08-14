@@ -1,0 +1,29 @@
+# Dependencias: se instalan dentro de la imagen. Copiarlas desde la maquina de
+# desarrollo ademas arrastraria binarios nativos compilados para otro sistema.
+node_modules
+
+# Secretos: sin esta linea el COPY . . del Dockerfile los hornea en la imagen.
+.env
+.env.*
+
+# Artefactos de build, se regeneran
+dist
+build
+.strapi
+.cache
+.tmp
+*.tsbuildinfo
+
+# Respaldos de base de datos y volcados
+*.dump
+*.sql
+
+# Subidas locales previas a Cloudinary
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Ruido
+.git
+.gitignore
+*.log
+README.md

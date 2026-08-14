@@ -1,0 +1,52 @@
+# Despliegue del backend en EC2: Strapi detras de Caddy, que resuelve el TLS
+# con Let's Encrypt de forma automatica.
+#
+# Uso, desde este directorio:
+#   docker compose up -d --build
+
+services:
+  strapi:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: ecommerce-strapi:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 1337
+      # Necesario detras de Caddy: sin esto Strapi se cree servido en http.
+      IS_PROXIED: "true"
+    # Sin "ports": el contenedor no se expone a internet, solo Caddy llega a el
+    # por la red interna. Asi el 1337 no queda abierto en la instancia.
+    expose:
+      - "1337"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:1337/_health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Se lee de deploy/.env; Caddy lo sustituye en el Caddyfile.
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - strapi
+
+volumes:
+  # Guarda los certificados emitidos. Sin este volumen se vuelven a pedir en
+  # cada reinicio y Let's Encrypt aplica limites de emision.
+  caddy_data:
+  caddy_config:

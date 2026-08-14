@@ -1,0 +1,26 @@
+# Caddy pide y renueva el certificado de Let's Encrypt solo, siempre que el
+# dominio ya resuelva a la IP de la instancia y los puertos 80 y 443 esten
+# abiertos en el grupo de seguridad.
+
+{$DOMINIO} {
+	encode gzip
+
+	# El panel de admin sube archivos a Cloudinary pasando por aqui.
+	request_body {
+		max_size 50MB
+	}
+
+	reverse_proxy strapi:1337 {
+		# Strapi las lee gracias a proxy: true en config/server.ts
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+	}
+}

@@ -1,4 +1,4 @@
-export default [
+export default ({ env }) => [
   'strapi::logger',
   'strapi::errors',
   {
@@ -15,7 +15,19 @@ export default [
       },
     },
   },
-  'strapi::cors',
+  {
+    // Por defecto Strapi acepta peticiones de cualquier origen. En produccion
+    // se restringe al dominio del frontend mediante CORS_ORIGINS, una lista
+    // separada por comas. Sin la variable se mantiene '*', para no estorbar en
+    // desarrollo local.
+    name: 'strapi::cors',
+    config: {
+      origin: env('CORS_ORIGINS', '*')
+        .split(',')
+        .map((origen: string) => origen.trim())
+        .filter(Boolean),
+    },
+  },
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
