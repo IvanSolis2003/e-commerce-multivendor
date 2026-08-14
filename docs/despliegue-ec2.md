@@ -8,6 +8,13 @@ recrearse entera sin pérdida de datos.
 Instancia de referencia: Ubuntu 22.04/24.04, t3.medium (4 GB). Con esa memoria
 el build de Strapi corre directo en la instancia y no hace falta swap.
 
+Dominios de este despliegue:
+
+| | |
+|---|---|
+| Backend (esta instancia) | `https://api.ecommerce.iasmtech.com` → `3.221.9.127` |
+| Frontend (Vercel) | `https://ecommerce.iasmtech.com` |
+
 ## 1. Preparación en AWS
 
 **IP elástica.** Asóciale una a la instancia. Sin ella la IP pública cambia cada
@@ -25,14 +32,14 @@ El 1337 **no se abre**: Strapi solo escucha en la red interna de Docker y se
 llega a él a través de Caddy.
 
 **DNS.** Crea un registro `A` para el subdominio (por ejemplo
-`api.tudominio.com`) apuntando a la IP elástica. Hazlo **antes** de levantar
+`api.ecommerce.iasmtech.com`) apuntando a la IP elástica. Hazlo **antes** de levantar
 Caddy: si el dominio no resuelve todavía, Let's Encrypt falla la validación y
 aplica límites de reintento.
 
 Comprueba la propagación antes de seguir:
 
 ```bash
-dig +short api.tudominio.com
+dig +short api.ecommerce.iasmtech.com
 ```
 
 ## 2. Docker en la instancia
@@ -69,14 +76,15 @@ nano .env
 
 Rellena `deploy/.env`:
 
-- `DOMINIO` y `PUBLIC_URL` con tu subdominio.
+- `DOMINIO` y `PUBLIC_URL` ya vienen con `api.ecommerce.iasmtech.com`.
 - `DATABASE_URL` con el endpoint **pooled** de Neon (el host con sufijo
   `-pooler`). El directo es solo para dump y restore.
 - Los seis secretos de Strapi **copiados tal cual** desde el `.env` actual. Si se
   regeneran, se invalidan las sesiones y los datos cifrados del respaldo ya
   restaurado.
 - Las tres credenciales de Cloudinary.
-- `CORS_ORIGINS` con la URL del frontend en Vercel.
+- `CORS_ORIGINS` ya viene con `https://ecommerce.iasmtech.com`, el frontend en
+  Vercel. Sin barra final.
 
 ## 4. Levantar
 
@@ -97,18 +105,18 @@ Caddy pide el certificado en cuanto arranca. En sus logs debe aparecer
 
 ```bash
 # Debe responder 204
-curl -I https://api.tudominio.com/_health
+curl -I https://api.ecommerce.iasmtech.com/_health
 
 # Debe devolver JSON con los 8 productos
-curl -s "https://api.tudominio.com/api/products?pagination[pageSize]=100" | head -c 400
+curl -s "https://api.ecommerce.iasmtech.com/api/products?pagination[pageSize]=100" | head -c 400
 ```
 
-Entra luego a `https://api.tudominio.com/admin` con `ivan.solis20.m@gmail.com` y
+Entra luego a `https://api.ecommerce.iasmtech.com/admin` con `ivan.solis20.m@gmail.com` y
 tu contraseña de siempre: el hash viene en el respaldo restaurado.
 
 ## 6. Conectar el frontend
 
-En Vercel, cambia `NEXT_PUBLIC_API_URL` a `https://api.tudominio.com` y
+En Vercel, cambia `NEXT_PUBLIC_API_URL` a `https://api.ecommerce.iasmtech.com` y
 **redespliega**: es una variable de build, no basta con guardarla.
 
 Verifica después en el navegador que no haya errores de CORS ni de contenido
