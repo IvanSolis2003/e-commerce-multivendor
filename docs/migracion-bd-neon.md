@@ -7,13 +7,32 @@ saliendo de Railway.
 
 | Origen | Estado |
 |---|---|
-| Postgres de Railway (`railway` @ `gondola.proxy.rlwy.net:25113`) | **Caído.** El proxy acepta TCP pero el servidor cierra la conexión de inmediato en cualquier `sslmode`. No se puede sacar un dump. |
+| Postgres de Railway (`railway` @ `gondola.proxy.rlwy.net:25113`) | **Inaccesible.** El proxy acepta TCP pero el servidor cierra la conexión de inmediato en cualquier `sslmode`. |
 | `backend/backup.dump` | **Válido.** Formato CUSTOM, gzip, generado con pg_dump 17.7 desde la base local `ecommerce_db` el 18-02-2026. |
 | Postgres local (`localhost:5432`) | Corriendo, pero la contraseña del `.env` es la de Railway, no la local. |
 
+### Por qué está caído Railway
+
+El proyecto `proactive-patience` tiene el **trial expirado**, así que Railway
+suspendió los servicios: el Postgres figura como *Service is offline* y los
+deploys están bloqueados. No es un contenedor caído, no hay redeploy que lo
+levante.
+
+El volumen `postgres-volume` **sigue adjunto**, o sea que los datos no se
+borraron: están tras el muro de pago. Reactivarlos exige contratar el plan Hobby.
+Railway elimina los datos de proyectos con trial expirado pasado un tiempo, así
+que esa ventana no es indefinida.
+
 > Ojo: `backup.dump` es de `ecommerce_db` (local), **no** de `railway`. Cualquier
-> dato generado en producción después del 18-02-2026 solo existe en Railway y hoy
-> es inaccesible.
+> dato generado en producción después del 18-02-2026 solo existe en el volumen de
+> Railway.
+
+### Decisión tomada
+
+Se descartó pagar el plan Hobby para rescatar el volumen. **Se migra a Neon con el
+respaldo del 18-02-2026**, asumiendo la pérdida de lo que se haya generado en
+producción después de esa fecha. El respaldo contiene un dataset completo y
+coherente, incluidos los permisos de Strapi, que es la parte cara de reconstruir.
 
 ## Contenido del respaldo
 
@@ -80,11 +99,11 @@ psql "$NEON_URL" -c "select count(*) from up_permissions;"  # espera 35
    `backend/config/database.js` ya lee solo `DATABASE_URL` y usa
    `ssl.rejectUnauthorized: false`, compatible con Neon sin tocar código.
 
-2. **Pool de conexiones.** Hoy `database.js` declara `pool: { min: 2, max: 10 }`.
-   Con Neon eso mantiene dos conexiones abiertas de forma permanente, lo que impide
-   el auto-suspend y consume horas de cómputo del plan gratuito de forma continua.
-   Para Neon conviene `min: 0`, y usar el endpoint *pooled* (el que lleva `-pooler`
-   en el host).
+2. **Pool de conexiones.** Resuelto en la rama `fix/pool-bd-para-neon`: `pool.min`
+   pasa de 2 a 0. Con `min: 2` el pool mantenía conexiones abiertas de forma
+   permanente, la base nunca se dormía y se consumía cómputo las 24 h. Conviene
+   además apuntar `DATABASE_URL` al endpoint *pooled* (el host con sufijo
+   `-pooler`).
 
 3. **Secretos.** Copiar sin regenerar desde `backend/.env`: `APP_KEYS`,
    `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`,
