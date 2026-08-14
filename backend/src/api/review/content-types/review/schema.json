@@ -15,7 +15,7 @@
       "type": "integer",
       "required": true,
       "min": 1,
-      "max": 7
+      "max": 5
     },
     "title": {
       "type": "string",
