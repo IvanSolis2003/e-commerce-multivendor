@@ -56,7 +56,9 @@ Verificado sobre el dump:
 - No contiene `CREATE DATABASE` (es un dump de una sola base).
 - Los objetos pertenecen al rol `postgres`, que **no existe en Neon** (allí el rol
   es `neondb_owner`). Por eso hay que restaurar con `--no-owner --no-privileges`.
-- Neon corre PostgreSQL 17 y el dump se generó con 17.7: sin problemas de versión.
+- Neon corre **PostgreSQL 18.4** y el dump se generó con 17.7. Restaurar un dump
+  más antiguo en un servidor más nuevo es una operación soportada y se completó
+  sin incidentes.
 
 ## Restauración
 
@@ -66,6 +68,19 @@ del PATH. En Git Bash:
 ```bash
 export PATH="/c/Program Files/PostgreSQL/17/bin:$PATH"
 ```
+
+### Endpoint directo, no el pooled
+
+Neon entrega dos endpoints: el *pooled* (host con sufijo `-pooler`, detrás de
+PgBouncer) y el *directo*. **La restauración va contra el directo.**
+
+Se intentó primero contra el pooled y el resultado fue engañoso: `pg_restore`
+terminó con código de salida 0 y creó las 53 tablas, pero las consultas de
+verificación a través del pooler no veían los objetos recién creados y devolvían
+`relation "orders" does not exist`. Repetida contra el endpoint directo, la
+operación se completó y verificó sin problemas.
+
+El pooled sí es el adecuado para `DATABASE_URL` de la aplicación en marcha.
 
 Con la cadena de conexión que entrega Neon (incluye `?sslmode=require`):
 
@@ -92,6 +107,35 @@ psql "$NEON_URL" -c "select count(*) from products;"    # espera 8
 psql "$NEON_URL" -c "select count(*) from orders;"      # espera 48
 psql "$NEON_URL" -c "select count(*) from up_permissions;"  # espera 35
 ```
+
+## Resultado de la restauración
+
+Ejecutada y verificada. Las 11 tablas comprobadas cuadran exactamente con el
+respaldo: 8 productos, 6 categorías, 6 vendedores, 48 pedidos, 56 líneas de
+pedido, 11 usuarios, 4 reseñas, 35 permisos, 2 roles, 13 archivos y 2 solicitudes
+de vendedor.
+
+Comprobaciones adicionales:
+
+- **Secuencias correctas.** Todas quedaron con `is_called = true` y su valor
+  alineado con el `max(id)` de su tabla. Verificado con un `nextval` real dentro
+  de una transacción revertida: la secuencia de productos entrega 14 y el id
+  máximo es 13, así que los INSERT nuevos no colisionan.
+- **Usuario admin recuperado:** `ivan.solis20.m@gmail.com`, activo y no bloqueado.
+  Entra al panel con su contraseña de siempre, porque el hash viaja en el dump.
+- **Permisos repartidos:** 18 en el rol `Public` y 17 en `Authenticated`.
+- **Relaciones íntegras:** los 8 productos conservan su vendedor.
+
+### Un dato preexistente, no un fallo de la migración
+
+**28 de los 48 pedidos no tienen usuario asociado** (solo 20 filas en
+`orders_users_permissions_user_lnk`). No es un error de la restauración: el
+respaldo ya venía así, y el conteo se replicó exacto.
+
+Son pedidos anteriores a la corrección del controlador que asocia el usuario
+autenticado a la orden. Como `order.find` filtra por usuario, esos 28 pedidos no
+los ve nadie desde "Mis pedidos"; solo aparecen en el panel de admin. Si se
+quieren recuperar, hay que reasignarlos a mano.
 
 ## Cambios en la aplicación
 
