@@ -20,13 +20,33 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
             return ctx.unauthorized('Debes iniciar sesión para crear una orden');
         }
 
-        // Inyectar la relación del usuario
-        // Usamos documents service para evitar validaciones estrictas del body
         const { data } = ctx.request.body;
 
-        // Asegurar que paymentStatus y orderStatus tengan valores por defecto si no vienen
+        // Los importes y los estados NO se aceptan del cliente: si se copiaran
+        // del body, cualquiera podria enviar totalAmount 0 y paymentStatus
+        // 'paid' y el pedido se registraria como pagado. Se descartan aqui y se
+        // calculan en el servidor conforme se añaden las lineas.
+        const {
+            subtotal: _subtotal,
+            discount: _discount,
+            tax: _tax,
+            shippingCost: _shippingCost,
+            totalAmount: _totalAmount,
+            orderStatus: _orderStatus,
+            paymentStatus: _paymentStatus,
+            users_permissions_user: _usuario,
+            ...datosPermitidos
+        } = data || {};
+
         const orderData = {
-            ...data,
+            ...datosPermitidos,
+            subtotal: 0,
+            discount: 0,
+            tax: 0,
+            shippingCost: 0,
+            totalAmount: 0,
+            orderStatus: 'pending',
+            paymentStatus: 'pending',
             users_permissions_user: user.documentId,
             publishedAt: new Date(), // Publicar inmediatamente
         };
@@ -40,8 +60,11 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
 
             const sanitizedEntity = await this.sanitizeOutput(newOrder, ctx);
             return this.transformResponse(sanitizedEntity);
-        } catch (error) {
-            ctx.throw(500, error);
+        } catch (error: any) {
+            // No se devuelve el error interno al cliente para no filtrar
+            // detalles de la implementacion.
+            strapi.log.error('Error al crear la orden', error);
+            return ctx.badRequest('No se pudo crear la orden');
         }
     },
 

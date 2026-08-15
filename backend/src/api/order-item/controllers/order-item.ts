@@ -2,13 +2,94 @@
  * order-item controller
  *
  * Las lineas de pedido solo pueden verse por el dueño del pedido al que
- * pertenecen. Sin este filtro el controlador por defecto devuelve las lineas de
+ * pertenecen. Sin ese filtro el controlador por defecto devuelve las lineas de
  * todos los usuarios, y expone que se vendio, a que precio y en que cantidad.
+ *
+ * Ademas, el precio de cada linea se toma del catalogo, nunca del cliente, y al
+ * crearla se recalculan los importes del pedido al que pertenece.
  */
 
 import { factories } from '@strapi/strapi';
 
+const redondear = (n: number) => Math.round(n * 100) / 100;
+
 export default factories.createCoreController('api::order-item.order-item', ({ strapi }) => ({
+    // ============================================================
+    // CREATE: precio y subtotal derivados del producto
+    // ============================================================
+    async create(ctx) {
+        const user = ctx.state.user;
+
+        if (!user) {
+            return ctx.unauthorized('Debes iniciar sesión para añadir líneas a un pedido');
+        }
+
+        const { data } = ctx.request.body;
+        const { order: documentIdPedido, product: documentIdProducto, quantity } = data || {};
+
+        if (!documentIdPedido || !documentIdProducto) {
+            return ctx.badRequest('Faltan el pedido o el producto');
+        }
+
+        const cantidad = Number.parseInt(String(quantity), 10);
+        if (!Number.isInteger(cantidad) || cantidad < 1) {
+            return ctx.badRequest('La cantidad debe ser un entero mayor que cero');
+        }
+
+        try {
+            // El pedido debe existir y pertenecer al usuario autenticado
+            const pedido = await strapi.documents('api::order.order').findOne({
+                documentId: String(documentIdPedido),
+                populate: ['users_permissions_user'],
+            });
+
+            if (!pedido) {
+                return ctx.notFound('Pedido no encontrado');
+            }
+
+            const dueno = (pedido as any).users_permissions_user?.documentId;
+            if (!dueno || dueno !== user.documentId) {
+                return ctx.forbidden('No puedes añadir líneas a un pedido que no es tuyo');
+            }
+
+            // El precio sale del catalogo, no del cliente
+            const producto = await strapi.documents('api::product.product').findOne({
+                documentId: String(documentIdProducto),
+            });
+
+            if (!producto) {
+                return ctx.notFound('Producto no encontrado');
+            }
+
+            const precio = Number((producto as any).price || 0);
+            const descuento = Number((producto as any).discount || 0);
+
+            const nuevaLinea = await strapi.documents('api::order-item.order-item').create({
+                data: {
+                    order: String(documentIdPedido),
+                    product: String(documentIdProducto),
+                    productName: (producto as any).name,
+                    productSku: (producto as any).sku || '',
+                    quantity: cantidad,
+                    price: precio,
+                    discount: descuento,
+                    subtotal: redondear(precio * cantidad),
+                    publishedAt: new Date(),
+                },
+                status: 'published',
+            });
+
+            // Con la linea ya creada, los importes del pedido se rehacen
+            await strapi.service('api::order.order').recalcularTotales(String(documentIdPedido));
+
+            const sanitizedEntity = await this.sanitizeOutput(nuevaLinea, ctx);
+            return this.transformResponse(sanitizedEntity);
+        } catch (error: any) {
+            strapi.log.error('Error al crear la línea de pedido', error);
+            return ctx.badRequest('No se pudo crear la línea de pedido');
+        }
+    },
+
     // ============================================================
     // FIND: solo las lineas de los pedidos del usuario autenticado
     // ============================================================
