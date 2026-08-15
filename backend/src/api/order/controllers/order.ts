@@ -105,10 +105,13 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
                 return ctx.notFound('Orden no encontrada');
             }
 
-            // Verificar pertenencia usando el documentId del usuario
+            // Verificar pertenencia usando el documentId del usuario.
+            // Se deniega tambien cuando la orden no tiene usuario asociado: de
+            // lo contrario la comprobacion se salta entera y cualquier usuario
+            // autenticado puede leer los datos de envio de esas ordenes.
             const orderUserDocId = order.users_permissions_user?.documentId;
 
-            if (orderUserDocId && orderUserDocId !== user.documentId) {
+            if (!orderUserDocId || orderUserDocId !== user.documentId) {
                 return ctx.forbidden('No tienes permiso para ver esta orden');
             }
 
