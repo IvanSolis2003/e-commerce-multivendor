@@ -6,10 +6,11 @@
 
 services:
   strapi:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-    image: ecommerce-strapi:latest
+    # La imagen la construye GitHub Actions y se descarga ya hecha: la
+    # instancia (t3.micro, 908 MB) no tiene memoria para compilar el panel de
+    # admin de Strapi. Se puede fijar un sha en lugar de latest para volver a
+    # una version concreta.
+    image: ${IMAGEN_STRAPI:-ghcr.io/ivansolis2003/e-commerce-multivendor/strapi:latest}
     restart: unless-stopped
     env_file: .env
     environment:

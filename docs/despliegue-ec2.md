@@ -128,10 +128,38 @@ mixto en la consola.
 docker compose logs -f strapi     # ver logs
 docker compose restart strapi     # reiniciar
 docker compose down               # detener todo
+```
 
-# Actualizar tras un cambio en el repositorio
-git pull
-docker compose up -d --build
+### Desplegar un cambio del backend
+
+La imagen la construye GitHub Actions al hacer merge en `main` y se publica en
+GHCR. La instancia no compila nada: solo descarga.
+
+```bash
+cd ~/e-commerce-multivendor/deploy
+./actualizar.sh
+```
+
+El script actualiza el repositorio, descarga la imagen, reinicia el servicio y
+espera a que responda `/_health`, informando de la imagen que queda en marcha.
+
+**Autenticacion en GHCR (una sola vez).** El paquete es privado, asi que la
+instancia necesita un token de GitHub con permiso `read:packages`:
+
+```bash
+echo "TU_TOKEN" | docker login ghcr.io -u IvanSolis2003 --password-stdin
+```
+
+Las credenciales quedan en `~/.docker/config.json` y persisten entre reinicios.
+
+### Volver a una version anterior
+
+Cada imagen se etiqueta tambien con el sha del commit. Para retroceder, se fija
+esa etiqueta en `deploy/.env`:
+
+```bash
+IMAGEN_STRAPI=ghcr.io/ivansolis2003/e-commerce-multivendor/strapi:sha-<commit>
+docker compose up -d
 ```
 
 Los contenedores llevan `restart: unless-stopped`, así que vuelven solos si la
@@ -160,9 +188,23 @@ sudo mkswap /swapfile && sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
+## Cómo se construye la imagen
+
+En `.github/workflows/imagen-backend.yml`, sobre los runners de GitHub, que
+tienen 16 GB de memoria.
+
+Esto no es una preferencia de estilo: la instancia **no puede** compilar el
+panel de admin de Strapi. Con 908 MB de RAM el build abortó primero con
+`Reached heap limit — JavaScript heap out of memory`, y tras elevar el límite de
+V8 y añadir 2 GB de swap se quedó intercambiando memoria con el 90 % de la CPU
+en espera de disco, sin converger.
+
+Durante un tiempo la imagen se construyó en la máquina de desarrollo y se
+transfería por SSH con `docker save` (272 MB, unos 4 minutos por despliegue).
+El workflow sustituye ese procedimiento.
+
 ## Qué queda pendiente de automatizar
 
-El despliegue es manual: `git pull` y `docker compose up -d --build` en la
-instancia. Si más adelante conviene, el paso natural es un workflow de GitHub
-Actions que construya la imagen y la publique, con la instancia limitándose a
-descargarla.
+El disparo del despliegue sigue siendo manual: hay que entrar a la instancia y
+ejecutar `actualizar.sh`. Automatizarlo del todo exigiría guardar la clave SSH
+como secreto del repositorio, decisión que conviene tomar con calma.
