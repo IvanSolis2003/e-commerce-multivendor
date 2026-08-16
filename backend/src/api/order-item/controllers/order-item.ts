@@ -63,20 +63,52 @@ export default factories.createCoreController('api::order-item.order-item', ({ s
 
             const precio = Number((producto as any).price || 0);
             const descuento = Number((producto as any).discount || 0);
+            const stockDisponible = Number((producto as any).stock || 0);
 
-            const nuevaLinea = await strapi.documents('api::order-item.order-item').create({
-                data: {
-                    order: String(documentIdPedido),
-                    product: String(documentIdProducto),
-                    productName: (producto as any).name,
-                    productSku: (producto as any).sku || '',
-                    quantity: cantidad,
-                    price: precio,
-                    discount: descuento,
-                    subtotal: redondear(precio * cantidad),
-                    publishedAt: new Date(),
-                },
-                status: 'published',
+            // Comprobacion temprana, solo para dar un mensaje util. La garantia
+            // real es el descuento condicional de mas abajo.
+            if (stockDisponible < cantidad) {
+                return ctx.badRequest(
+                    `No hay stock suficiente de ${(producto as any).name}: quedan ${stockDisponible} y se piden ${cantidad}`
+                );
+            }
+
+            let nuevaLinea: any;
+
+            await strapi.db.transaction(async ({ trx }) => {
+                // Descuento atomico y condicional. El checkout envia las lineas
+                // en paralelo, asi que leer el stock y restarlo por separado
+                // permitiria que dos peticiones simultaneas pasaran ambas la
+                // comprobacion. Aqui la condicion viaja dentro del UPDATE: si
+                // otra peticion se adelanto y ya no queda suficiente, no se
+                // afecta ninguna fila.
+                //
+                // El filtro es por document_id y no por id porque draft & publish
+                // guarda dos filas por producto: hay que descontar en las dos o
+                // el panel de admin y la API acaban mostrando cifras distintas.
+                const filasAfectadas = await trx('products')
+                    .where('document_id', String(documentIdProducto))
+                    .andWhere('stock', '>=', cantidad)
+                    .decrement('stock', cantidad);
+
+                if (!filasAfectadas) {
+                    throw Object.assign(new Error('Stock insuficiente'), { sinStock: true });
+                }
+
+                nuevaLinea = await strapi.documents('api::order-item.order-item').create({
+                    data: {
+                        order: String(documentIdPedido),
+                        product: String(documentIdProducto),
+                        productName: (producto as any).name,
+                        productSku: (producto as any).sku || '',
+                        quantity: cantidad,
+                        price: precio,
+                        discount: descuento,
+                        subtotal: redondear(precio * cantidad),
+                        publishedAt: new Date(),
+                    },
+                    status: 'published',
+                });
             });
 
             // Con la linea ya creada, los importes del pedido se rehacen
@@ -85,6 +117,11 @@ export default factories.createCoreController('api::order-item.order-item', ({ s
             const sanitizedEntity = await this.sanitizeOutput(nuevaLinea, ctx);
             return this.transformResponse(sanitizedEntity);
         } catch (error: any) {
+            // Si el descuento condicional no encontro stock, la transaccion se
+            // deshizo entera: no queda ni linea creada ni stock restado.
+            if (error?.sinStock) {
+                return ctx.badRequest('No hay stock suficiente para completar el pedido');
+            }
             strapi.log.error('Error al crear la línea de pedido', error);
             return ctx.badRequest('No se pudo crear la línea de pedido');
         }
