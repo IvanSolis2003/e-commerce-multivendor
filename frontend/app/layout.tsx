@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -104,6 +105,11 @@ export default function RootLayout({
             <Footer />
           </CartProvider>
         </AuthProvider>
+        <Script
+          src="https://iasm-pulse.vercel.app/track.js"
+          data-site="ecommerce.iasmtech.com"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
