@@ -78,11 +78,13 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Medir el tamaño
+        env:
+          EVENTO: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "$EVENTO" = "pull_request" ]; then
             bytes=$(docker image inspect "$IMAGEN:latest" --format '{{.Size}}')
-            echo "TAMANO=descomprimida en disco: $(numfmt --to=iec "$bytes")" >> "$GITHUB_ENV"
+            etiqueta="descomprimida en disco"
           else
             # El manifiesto da los tamanos comprimidos, que es lo que realmente
             # descarga la instancia. Si buildx genero un indice multiplataforma
@@ -93,16 +95,23 @@ jobs:
               digest=$(echo "$raw" | jq -r '.manifests[]
                 | select(.platform.os == "linux" and .platform.architecture == "amd64")
                 | .digest' | head -1)
-              bytes=$(docker buildx imagetools inspect "$IMAGEN@$digest" --raw \
-                | jq '[.layers[].size] | add')
+              bytes=$(docker buildx imagetools inspect "$IMAGEN@$digest" --raw | jq '[.layers[].size] | add')
             fi
-            echo "TAMANO=a descargar (comprimida): $(numfmt --to=iec "$bytes")" >> "$GITHUB_ENV"
+            etiqueta="a descargar (comprimida)"
           fi
+          medida="$etiqueta: $(numfmt --to=iec "$bytes")"
+          # A stdout ademas de GITHUB_ENV: lo segundo solo lo ve el paso
+          # siguiente, y conviene poder leer la cifra desde el log.
+          echo "Tamaño de la imagen -> $medida"
+          echo "TAMANO=$medida" >> "$GITHUB_ENV"
 
       - name: Resumen
+        env:
+          EVENTO: ${{ github.event_name }}
+          ETIQUETAS: ${{ steps.meta.outputs.tags }}
         run: |
           {
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "$EVENTO" = "pull_request" ]; then
               echo "### Imagen construida (no publicada)"
               echo ""
               echo "El Dockerfile es valido. La publicacion ocurre al entrar en main."
@@ -110,7 +119,7 @@ jobs:
               echo "### Imagen publicada"
               echo ""
               echo '```'
-              echo "${{ steps.meta.outputs.tags }}"
+              echo "$ETIQUETAS"
               echo '```'
               echo ""
               echo "Para desplegar, en la instancia: \`cd ~/e-commerce-multivendor/deploy && ./actualizar.sh\`"
