@@ -1,0 +1,76 @@
+name: Imagen del backend
+
+# Construye la imagen de Strapi y la publica en GHCR.
+#
+# Existe porque la instancia EC2 es una t3.micro con 908 MB de RAM y no puede
+# compilar el panel de admin: la primera vez aborto con "Reached heap limit" y,
+# tras ampliar el limite y añadir swap, se quedo intercambiando memoria con el
+# 90% de la CPU en espera de disco. Los runners de GitHub tienen 16 GB, asi que
+# el problema desaparece de raiz.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/imagen-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # GHCR exige minusculas en el nombre de la imagen, y el usuario del repo
+  # lleva mayusculas, asi que no se puede usar github.repository tal cual.
+  IMAGEN: ghcr.io/ivansolis2003/e-commerce-multivendor/strapi
+
+jobs:
+  publicar:
+    name: Construir y publicar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Autenticarse en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calcular etiquetas
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGEN }}
+          # latest para el despliegue habitual y el sha para poder volver a una
+          # version concreta si un despliegue sale mal.
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Construir y publicar
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # La cache entre ejecuciones evita repetir npm install cuando solo
+          # cambia el codigo.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Resumen
+        run: |
+          echo "### Imagen publicada" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Para desplegar, en la instancia: \`cd ~/e-commerce-multivendor/deploy && ./actualizar.sh\`" >> $GITHUB_STEP_SUMMARY
